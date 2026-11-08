@@ -12,16 +12,20 @@ collections:
   # 公開パスは各ページのfront matterのpermalinkで /docs/<タブ>/<スラッグ>/ の形に指定する。
   docs:
     output: true
+  # ルールの過去の版(_rule_versions/<ルールID>/)。script/rule_history.py が _rules の Git 履歴から
+  # 生成する(コミットしない)。公開パスは各ページの permalink で /rule/<ルールID>/<改正したルールのID>.html に指定する。
+  rule_versions:
+    output: true
 
 # _rules はルール用リポジトリ(ds-craft/rules)のサブモジュール。条文は _rules/rules/ にある。
-# 廃止したルールは _rules/rules/repealed/ に置かれているが、廃止ルールの表示(一覧の「廃止」表示・
-# 改正履歴)を実装するまでは公開しない。実装時はこの published: false を repealed: true に置き換える。
+# 廃止したルールは _rules/rules/repealed/ に置かれており、repealed: true を付けて区別する
+# (一覧での「廃止」表示、条文ページの廃止の案内に使う)。
 defaults:
   - scope:
       path: "_rules/rules/repealed"
       type: rules
     values:
-      published: false
+      repealed: true
 
 # ガイドページの「Markdownを表示」で開く、元のMarkdownファイルの置き場所(GitHubの生ファイル)
 docs_source_base: https://raw.githubusercontent.com/ds-craft/portal/main/

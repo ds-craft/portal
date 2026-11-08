@@ -1,0 +1,46 @@
+{%- comment -%}
+  条文ページの本文の上: 表示中の版の見出し(施行日・現行/廃止/過去の版・改正したルール)と、
+  「条文」「条文比較」の切り替えタブ、条文比較(新旧対照表)のパネル。e-Gov法令検索にならう。
+  条文比較は ?tab=compare で開く(切り替えは _includes/rule-compare-scripts.html)。
+{%- endcomment -%}
+{%- assign rid = page.rule_id | default: page.slug -%}
+{%- assign hist = site.data.rule_history[rid] -%}
+{%- if hist -%}
+{%- if page.version_id -%}
+{%- assign this_v = hist.versions | where: "vid", page.version_id | first -%}
+{%- else -%}
+{%- assign this_v = hist.versions | last -%}
+{%- endif -%}
+      <div class="rule-version">
+        <div class="rule-version__head">
+          <svg class="rule-version__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h9l5 5v15H6V2Z" stroke="currentColor" stroke-width="1.6"/><path d="M15 2v5h5" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span class="rule-version__date">{{ this_v.date }} 施行</span>
+          {%- if this_v.latest and hist.repealed == false %}
+          <span class="rule-version__current">★ 現行</span>
+          {%- elsif this_v.latest %}
+          <span class="dads-chip-label rule-version__chip" data-style="filled-2" data-color="gray">廃止</span>
+          {%- else %}
+          <span class="dads-chip-label rule-version__chip" data-style="filled-1" data-color="yellow">過去の版</span>
+          {%- endif %}
+        </div>
+        <p class="rule-version__by">{{ this_v.title }}（{{ this_v.by_number }}）</p>
+        {%- if this_v.latest == false %}
+        <p class="rule-version__note">この版は、{{ this_v.end }}に{{ this_v.next_by_number }}{% if hist.repealed and this_v.end == hist.repeal.date %}によりルールが廃止された{% else %}による改正が施行された{% endif %}ため、現在は効力がありません。<a class="dads-link" href="../{{ rid }}.html">{% if hist.repealed %}廃止時点の条文{% else %}現行の条文{% endif %}</a></p>
+        {%- elsif hist.repealed %}
+        {%- assign by_rule = site.rules | where: "slug", hist.repeal.by_id | first %}
+        <p class="rule-version__note">このルールは、{{ hist.repeal.date }}に{% if by_rule %}<a class="dads-link" href="{{ by_rule.url | relative_url }}">{{ by_rule.rule_name }}（{{ hist.repeal.by_number }}）</a>{% else %}{{ hist.repeal.by_number }}{% endif %}により廃止されました。以下は廃止された時点の条文です。</p>
+        {%- endif %}
+      </div>
+
+      <div class="rule-tabs" role="tablist" aria-label="表示の切り替え">
+        <button class="rule-tabs__tab" type="button" role="tab" id="rule-tab-text" aria-selected="true">条文</button>
+        <button class="rule-tabs__tab" type="button" role="tab" id="rule-tab-compare" aria-selected="false"{% if this_v.compare_html %} aria-controls="rule-compare"{% else %} disabled title="制定時の版のため、比べる前の版はありません"{% endif %}>条文比較</button>
+      </div>
+
+      {%- if this_v.compare_html %}
+      <div class="rule-compare" id="rule-compare" role="tabpanel" aria-labelledby="rule-tab-compare" hidden>
+        <p class="rule-compare__lead">{{ this_v.by_number }}による改正で変わった条だけを載せています。<ins class="diff-mark">傍線</ins>の部分が改正後に加わった部分、<del class="diff-mark">傍線</del>の部分が改正前にあって改められた部分です。</p>
+        {{ this_v.compare_html }}
+      </div>
+      {%- endif %}
+{%- endif -%}

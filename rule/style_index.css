@@ -360,3 +360,29 @@ body {
     box-shadow: none !important;
   }
 }
+
+/* ===== 廃止されたルールの表示 ===== */
+/* 「廃止されたルールも表示」のチェックボックスを並び替えと同じ行に並べる(狭い画面では折り返す) */
+.rules-sort {
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+.rules-repealed-toggle .dads-checkbox__label {
+  font-size: calc(13 / 16 * 1rem);
+}
+
+/* 廃止したルールはグレーで表示し、区分タグの横に「廃止」を付ける */
+.rule-item--repealed .rule-item__title,
+.rule-item--repealed .rule-item__number,
+.rule-item--repealed .rule-date {
+  color: var(--color-neutral-solid-gray-600);
+}
+.rule-item__status.dads-chip-label {
+  border-radius: 0;
+  min-height: auto;
+  padding: 1px 5px;
+  font-size: calc(11 / 16 * 1rem);
+  line-height: 1.4;
+  margin-left: 0.5em;
+  white-space: nowrap;
+}

@@ -39,7 +39,7 @@
   <main class="main-content">
     <div class="hero-section">
       <h1>3DS半分こするくらい仲良しクラフト<br>ルールポータルへようこそ！</h1>
-      <p>現在施行されているルール、ルール施行令、一部国内法を掲載しています。</p>
+      <p>現在施行されているルール、ルール施行令、一部国内法を掲載しています。廃止されたルールや、改正前の条文・改正履歴も確認できます。</p>
     </div>
 
     <div class="rules-section">
@@ -48,6 +48,12 @@
           <h2>掲載中のルール一覧</h2>
         </div>
         <div class="rules-sort">
+          <label class="dads-checkbox rules-repealed-toggle" data-size="sm">
+            <span class="dads-checkbox__checkbox">
+              <input class="dads-checkbox__input" type="checkbox" id="rules-show-repealed" />
+            </span>
+            <span class="dads-checkbox__label">廃止されたルールも表示</span>
+          </label>
           <div class="rules-sort-inner">
             <label for="rules-sort-select">並び替え</label>
             <span class="dads-select">
@@ -84,77 +90,83 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   // ルール一覧はビルド時に_rules配下の各ページのfront matterから生成する
-  // (rules.jsonへの実行時fetchは行わない。一覧の並び順はfront matterのorderに従う)
-  let rulesOriginal = [
-    {% assign sorted_rules = site.rules | sort: "order" -%}
-    {%- for rule in sorted_rules -%}
+  // (rules.jsonへの実行時fetchは行わない)。廃止したルール(_rules/rules/repealed/)も含める。
+  const rulesAll = [
+    {%- for rule in site.rules %}
     {
       id: {{ rule.url | split: '/' | last | jsonify }},
+      order: {{ rule.order | default: 9999 | jsonify }},
       rule_name: {{ rule.rule_name | jsonify }},
       rule_number: {{ rule.rule_number | jsonify }},
       enforcement_date: {{ rule.enforcement_date | jsonify }},
-      category: {{ rule.category | jsonify }}
+      category: {{ rule.category | jsonify }},
+      repealed: {{ rule.repealed | default: false | jsonify }},
+      repealed_date: {{ rule.repealed_date | jsonify }}
     }{% unless forloop.last %},{% endunless %}
-    {% endfor -%}
+    {%- endfor %}
   ];
-  let rulesCurrent = rulesOriginal.slice();
   const categoryOrder = { "ルール": 0, "ルール施行令": 1, "国内法": 2 };
+  const byId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  const sorters = {
+    // デフォルト: front matterのorder順。orderが同じもの(廃止したルールとその位置を引き継いだルール)はルール番号順
+    default: (a, b) => (a.order - b.order) || byId(a, b),
+    id: byId,
+    category: (a, b) => ((categoryOrder[a.category] ?? 99) - (categoryOrder[b.category] ?? 99)) || byId(a, b)
+  };
+  const sortSelect = document.getElementById('rules-sort-select');
+  const repealedToggle = document.getElementById('rules-show-repealed');
 
-  function renderRules(rules) {
+  // 「廃止されたルールも表示」は ?repealed=1 でURLに残す(リンクを共有したときも同じ表示にするため)
+  try {
+    repealedToggle.checked = new URLSearchParams(location.search).get('repealed') === '1';
+  } catch (e) { /* URLを読めない環境では既定(非表示)のまま */ }
+
+  const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function render() {
+    const showRepealed = repealedToggle.checked;
+    const rules = rulesAll
+      .filter(r => showRepealed || !r.repealed)
+      .sort(sorters[sortSelect.value] || sorters.default);
     const rulesList = document.getElementById('rules-list');
     const rulesCount = document.querySelector('.rules-count');
     rulesList.innerHTML = '';
-    if (!rules || rules.length === 0) {
+    if (rules.length === 0) {
       rulesList.innerHTML = '<li><p>現在掲載中のルールはありません。</p></li>';
-      rulesCount.textContent = '（表示0件/全0件）';
-      return;
     }
     rules.forEach(rule => {
       const li = document.createElement('li');
-      const numberText = rule.rule_number ? `<span class="rule-item__number">（${rule.rule_number}）</span>` : '';
+      const numberText = rule.rule_number ? `<span class="rule-item__number">（${escapeHtml(rule.rule_number)}）</span>` : '';
+      const repealedChip = rule.repealed ? '<span class="dads-chip-label rule-item__status" data-style="filled-2" data-color="gray">廃止</span>' : '';
+      // 廃止したルールは廃止日だけを出す(どのルールにより廃止されたかは条文ページに出す)
+      const repealText = rule.repealed && rule.repealed_date
+        ? `<span class="rule-date">${escapeHtml(rule.repealed_date)} 廃止</span>` : '';
       li.innerHTML = `
-        <a class="rule-item" href="${rule.id}">
-          <div class="rule-item__row1"><svg class="rule-item__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h9l5 5v15H6V2Z" stroke="currentColor" stroke-width="1.6"/><path d="M15 2v5h5" stroke="currentColor" stroke-width="1.6"/></svg><span class="rule-item__title">${rule.rule_name}</span>${numberText}<span class="dads-chip-label rule-item__category" data-style="outlined" data-color="gray">${rule.category}</span></div>
+        <a class="rule-item${rule.repealed ? ' rule-item--repealed' : ''}" href="${escapeHtml(rule.id)}">
+          <div class="rule-item__row1"><svg class="rule-item__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h9l5 5v15H6V2Z" stroke="currentColor" stroke-width="1.6"/><path d="M15 2v5h5" stroke="currentColor" stroke-width="1.6"/></svg><span class="rule-item__title">${escapeHtml(rule.rule_name)}</span>${numberText}<span class="dads-chip-label rule-item__category" data-style="outlined" data-color="gray">${escapeHtml(rule.category)}</span>${repealedChip}</div>
           <div class="rule-meta">
-            <span class="rule-date">${rule.enforcement_date} 施行</span>
+            <span class="rule-date">${escapeHtml(rule.enforcement_date)} 施行</span>${repealText}
           </div>
         </a>
       `;
       rulesList.appendChild(li);
     });
-    rulesCount.textContent = `（表示${rules.length}件/全${rulesOriginal.length}件）`;
+    const repealedCount = rulesAll.filter(r => r.repealed).length;
+    rulesCount.textContent = showRepealed
+      ? `（表示${rules.length}件：現行${rules.length - repealedCount}件・廃止${repealedCount}件）`
+      : `（表示${rules.length}件・ほかに廃止${repealedCount}件）`;
   }
 
-  renderRules(rulesCurrent);
-
-  document.getElementById('rules-sort-select').addEventListener('change', function() {
-    let sorted;
-    if (this.value === 'default') {
-      sorted = rulesOriginal.slice();
-    } else if (this.value === 'id') {
-      sorted = rulesCurrent.slice().sort((a, b) => {
-        // アルファベット→数字順
-        if (a.id < b.id) return -1;
-        if (a.id > b.id) return 1;
-        return 0;
-      });
-    } else if (this.value === 'category') {
-      sorted = rulesCurrent.slice().sort((a, b) => {
-        const ca = categoryOrder[a.category] ?? 99;
-        const cb = categoryOrder[b.category] ?? 99;
-        if (ca !== cb) return ca - cb;
-        // 同じカテゴリならid順
-        if (a.id < b.id) return -1;
-        if (a.id > b.id) return 1;
-        return 0;
-      });
-    } else {
-      sorted = rulesOriginal.slice();
-    }
-    rulesCurrent = sorted;
-    renderRules(rulesCurrent);
+  sortSelect.addEventListener('change', render);
+  repealedToggle.addEventListener('change', function() {
+    try {
+      const url = new URL(location.href);
+      if (this.checked) { url.searchParams.set('repealed', '1'); } else { url.searchParams.delete('repealed'); }
+      history.replaceState(null, '', url);
+    } catch (e) { /* URLを書き換えられない環境では表示だけ切り替える */ }
+    render();
   });
-
+  render();
 });
 </script>
 

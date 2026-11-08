@@ -1,0 +1,17 @@
+{%- comment -%}
+  ヘッダー直下のメタバー。front matterからビルド時に描画する(rules.jsonへの実行時fetchは行わない)。
+  1行目: ルール名・ルール番号・区分。2行目: 施行日と、廃止したルールなら廃止日。
+  表示中の版の情報は本文の上(_includes/rule-version-header.html)、版の一覧は左の列(_includes/rule-history-list.html)に出す。
+{%- endcomment -%}
+{%- assign rid = page.rule_id | default: page.slug -%}
+{%- assign hist = site.data.rule_history[rid] -%}
+  <div class="law-info">
+    <div class="rule-item__row1"><svg class="rule-item__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h9l5 5v15H6V2Z" stroke="currentColor" stroke-width="1.6"/><path d="M15 2v5h5" stroke="currentColor" stroke-width="1.6"/></svg><span class="rule-item__title">{{ page.rule_name }}</span>{% if page.rule_number and page.rule_number != "" %}<span class="rule-item__number">（{{ page.rule_number }}）</span>{% endif %}<span class="dads-chip-label rule-item__category" data-style="outlined" data-color="gray">{{ page.category }}</span></div>
+    <div class="rule-meta">
+      <span class="rule-date">{{ page.enforcement_date }} 施行</span>
+      {%- if hist.repeal %}
+      <span class="dads-chip-label rule-status" data-style="filled-2" data-color="gray">廃止</span>
+      <span class="rule-date">{{ hist.repeal.date }} 廃止</span>
+      {%- endif %}
+    </div>
+  </div>

@@ -53,6 +53,9 @@ jobs:
           ruby-version: "3.3"
           bundler-cache: true  # Gemfile.lock のgemを vendor/bundle に入れてキャッシュする
 
+      - name: ルールの改正履歴のページを生成する
+        run: python3 script/rule_history.py
+
       - id: pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5

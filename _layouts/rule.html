@@ -1,79 +1,21 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <link rel="manifest" href="manifest.json" />
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ page.title }} | DSルールポータル</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/dads/tokens.css" />
-  <link rel="stylesheet" href="assets/dads/base.css" />
-  <link rel="stylesheet" href="assets/dads/components.css" />
-  <link rel="stylesheet" href="style.css" />
-  <script type="module" src="assets/dads/switch-on-off.js"></script>
-  <meta http-equiv="Cache-Control" content="no-store">
-  <meta property="og:site_name" content="DSクラフト ルールポータル" />
-  <meta property="og:url" content="{{ page.url | absolute_url }}" />
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="{{ page.title }}" />
-  <meta property="og:description" content="{{ page.og_description }}" />
-  <meta property="og:image" content="https://www.ds2.uk/ds_logo_3.png" />
-  <meta property="og:locale" content="ja_JP" />
-
+{% include rule-head.html %}
 </head>
 <body class="law-info-v2">
 
-  <!-- ヘッダー -->
-  <header class="site-header">
-    <div class="site-header__inner">
-      <a class="site-header__logo" href="index.html">DSクラフト ルールポータル</a>
-      <nav class="top-nav" aria-label="サイトナビゲーション">
-        <a class="dads-link" href="index.html">ホーム</a>
-        <a class="dads-link" href="https://www.ds2.uk/">DSトップ</a>
-      </nav>
-      <div class="header-actions">
-        <button class="dads-button" data-type="outline" data-size="sm" id="toc-toggle-btn" type="button">目次</button>
-        <button class="dads-hamburger-menu-icon-button" id="drawer-menu-btn" type="button" aria-label="メニュー">
-          <svg class="dads-hamburger-menu-icon-button__icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3 18V16H21V18H3ZM3 13V11H21V13H3ZM3 8V6H21V8H3Z" fill="currentcolor"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- サイトナビゲーションドロワー -->
-  <dialog class="dads-drawer" id="site-drawer" data-placement="right" aria-labelledby="site-drawer-heading">
-    <h2 id="site-drawer-heading" class="dads-u-visually-hidden">メニュー</h2>
-    <div class="dads-drawer__header">
-      <button class="dads-hamburger-menu-button" id="drawer-close-btn" type="button">
-        <svg class="dads-hamburger-menu-button__icon" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="m6.4 18.6-1-1 5.5-5.6-5.6-5.6 1.1-1 5.6 5.5 5.6-5.6 1 1.1L13 12l5.6 5.6-1 1L12 13l-5.6 5.6Z" fill="currentcolor"/>
-        </svg>
-        閉じる
-      </button>
-    </div>
-    <div class="dads-drawer__body">
-      <ul class="dads-menu-list">
-        <li><a class="dads-menu-list__item" data-type="standard" data-size="regular" href="index.html"><span class="dads-menu-list__label">ホーム</span></a></li>
-        <li><a class="dads-menu-list__item" data-type="standard" data-size="regular" href="https://www.ds2.uk/"><span class="dads-menu-list__label">DSトップ</span></a></li>
-      </ul>
-    </div>
-  </dialog>
+{% include rule-site-header.html toc=true %}
 
   <!-- law-info: front matterからビルド時に直接描画する(rules.jsonへの実行時fetchは行わない) -->
-  <div class="law-info">
-    <div class="rule-item__row1"><svg class="rule-item__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h9l5 5v15H6V2Z" stroke="currentColor" stroke-width="1.6"/><path d="M15 2v5h5" stroke="currentColor" stroke-width="1.6"/></svg><span class="rule-item__title">{{ page.rule_name }}</span>{% if page.rule_number and page.rule_number != "" %}<span class="rule-item__number">（{{ page.rule_number }}）</span>{% endif %}<span class="dads-chip-label rule-item__category" data-style="outlined" data-color="gray">{{ page.category }}</span></div>
-    <div class="rule-meta"><span class="rule-date">{{ page.enforcement_date }} 施行</span></div>
-  </div>
+{% include rule-law-info.html %}
 
   <!-- メインラッパー -->
   <div class="container">
 
-    <!-- サイドバー(目次): モバイルでは全画面表示に切り替わる -->
+    <!-- サイドバー(改正履歴・目次): モバイルでは全画面表示に切り替わる -->
     <aside class="sidebar" id="sidebar">
+{% include rule-history-list.html %}
       <nav class="dads-toc" aria-label="目次">
         <h2 class="dads-toc__heading">目次</h2>
         <ul class="dads-list" id="toc" data-spacing="8"></ul>
@@ -85,6 +27,7 @@
 
     <!-- 本文表示 -->
     <main class="main-content">
+{% include rule-version-header.html %}
       <div class="law-header">
         <div class="dads-form-control-label" data-size="sm">
           <dads-switch-on-off class="dads-switch-on-off">
@@ -111,16 +54,9 @@
   </div>
 
   {% include rule-scripts.html %}
+  {% include rule-compare-scripts.html %}
 
-  <!-- フッター -->
-  <footer class="site-footer">
-    <div class="footer-left">
-      <p>©2026 3DS半分こするくらい仲良しクラフト中央委員会</p>
-    </div>
-    <div class="footer-right">
-      <a href="#" class="dads-link" id="print-btn">印刷</a>
-    </div>
-  </footer>
+{% include rule-footer.html %}
 
 </body>
 </html>
