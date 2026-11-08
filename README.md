@@ -56,7 +56,7 @@ Minecraft（Java版）のマルチプレイコミュニティ「3DS半分こす�
 ├── guide.html                # 旧・新規参加者ガイド（/docs/life/ への転送のみ）
 ├── style.css                 # 全体共通ベーススタイル
 ├── _config.yml               # Jekyll 設定ファイル
-├── _rules/                   # ルール条文（Markdown、1ファイル ＝ 1ルール）
+├── _rules/                   # サブモジュール ds-craft/rules。条文は _rules/rules/（1ファイル ＝ 1ルール、廃止したルールは rules/repealed/）
 ├── _docs/                    # ガイド本文（Markdown、_docs/<タブ>/ に 1ファイル ＝ 1章）
 ├── _data/docs_tabs.yml       # ガイドのタブ定義（並び・名前・アイコン・関連リンク）
 ├── _layouts/                 # rule.html：条文ページ、doc.html：ガイドページの共通レイアウト
@@ -99,7 +99,15 @@ jekyll serve
 
 ### ルールの追加・改正・廃止
 
-ルールは `_rules/` ディレクトリ配下に「1ルール1ファイル」の Markdown 形式で配置します。一覧ページはビルド時に各ファイルの front matter から自動生成されるため、一覧ページ側を手動で編集する必要はありません。
+ルールは `_rules/rules/` ディレクトリ配下に「1ルール1ファイル」の Markdown 形式で配置します。一覧ページはビルド時に各ファイルの front matter から自動生成されるため、一覧ページ側を手動で編集する必要はありません。
+
+`_rules/` はルール用リポジトリ [ds-craft/rules](https://github.com/ds-craft/rules) のサブモジュールです。ルールの追加・改正・廃止は ds-craft/rules に「改正行為ごとに1コミット（コミット日時は施行日）」で記録し、このリポジトリではサブモジュールの参照先を更新します。
+
+```bash
+git clone --recurse-submodules https://github.com/ds-craft/portal.git   # 初回
+git submodule update --remote _rules                                    # ルールの更新を取り込む
+git add _rules && git commit -m "ルールを更新"
+```
 
 #### ファイル名規則
 
@@ -163,7 +171,7 @@ og_description: 基本ルール(令和7年ルール第1号)
   字下げの単位は本文の全角1字分です。本文の行頭の全角空白は有無どちらでも同じ表示になります。ルール番号・題名・章節款の字下げも同じ単位で揃えています（`rule/style.css` の `--law-zw`）。
 - **条文間リンク**：飛び先は見出しの文言そのまま（空白は `-`）で指定します（例：`R0701002.html#第8条（窃盗の禁止）`）。
 - **注意**：行頭の `1.`・`- `・`#`・`>` や、`*`・`_` で囲んだ文字は Markdown の記法として解釈されるため避けてください。
-- **廃止**：該当するルールファイルを削除します。
+- **廃止**：該当するルールファイルを `rules/repealed/` に移し、front matter に `repealed_date`（廃止日）と `repealed_by`（廃止したルールの番号）を足します。廃止ルールは現在は公開していません（`_config.yml` の `defaults` で `published: false`）。
 
 ### ガイドの追加・編集
 
