@@ -49,7 +49,8 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.3.4"
+          # GitHub Pagesは3.3.4だが、新しいランナーには3.3系の最新版しかないため3.3を指定する(パッチ版の違いは出力に影響しない)
+          ruby-version: "3.3"
           bundler-cache: true  # Gemfile.lock のgemを vendor/bundle に入れてキャッシュする
 
       - id: pages
