@@ -13,6 +13,16 @@ collections:
   docs:
     output: true
 
+# _rules はルール用リポジトリ(ds-craft/rules)のサブモジュール。条文は _rules/rules/ にある。
+# 廃止したルールは _rules/rules/repealed/ に置かれているが、廃止ルールの表示(一覧の「廃止」表示・
+# 改正履歴)を実装するまでは公開しない。実装時はこの published: false を repealed: true に置き換える。
+defaults:
+  - scope:
+      path: "_rules/rules/repealed"
+      type: rules
+    values:
+      published: false
+
 # ガイドページの「Markdownを表示」で開く、元のMarkdownファイルの置き場所(GitHubの生ファイル)
 docs_source_base: https://raw.githubusercontent.com/ds-craft/portal/main/
 
@@ -20,10 +30,14 @@ docs_source_base: https://raw.githubusercontent.com/ds-craft/portal/main/
 # ファイル数が非常に多くビルド対象に含めると重いため除外する。
 # skills-lock.jsonはClaude Code用のツール設定でサイトの公開物ではないため除外する。
 # README.mdはリポジトリの説明であり、GitHub Pagesでページ化されないよう除外する。
+# _rules/ のREADME.md・LICENSEはルール用リポジトリの説明・ライセンス文書で、
+# 除外しないと /rules/README.md・/rules/LICENSE として公開されるため除外する。
 exclude:
   - rule/design-system-example-components-html
   - skills-lock.json
   - README.md
+  - _rules/README.md
+  - _rules/LICENSE
 
 # ルール条文をMarkdown(_rules/*.md)で書くための変換設定。
 # hard_wrap: 条文中の改行(項・号の区切り)をそのまま<br>にする。

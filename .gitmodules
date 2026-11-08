@@ -1,0 +1,4 @@
+[submodule "_rules"]
+	path = _rules
+	url = https://github.com/ds-craft/rules.git
+	branch = main
