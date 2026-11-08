@@ -1,0 +1,2 @@
+# シェルスクリプトはWSL・Linuxで実行するため、改行コードをLFに固定する
+*.sh text eol=lf

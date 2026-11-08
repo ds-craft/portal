@@ -1,0 +1,57 @@
+<script>
+// 「条文」「条文比較」タブの切り替え(_includes/rule-version-header.html)。
+// 条文比較を開いているときは URL に ?tab=compare を付け、左の改正履歴のリンクも条文比較を開くようにする
+// (e-Gov法令検索と同じく、版を移っても条文比較のまま見られるようにするため)。
+document.addEventListener('DOMContentLoaded', function() {
+  const mainEl = document.querySelector('main.main-content');
+  const tabText = document.getElementById('rule-tab-text');
+  const tabCompare = document.getElementById('rule-tab-compare');
+  const panel = document.getElementById('rule-compare');
+  if (!mainEl || !tabText || !tabCompare) return;
+
+  const historyLinks = Array.from(document.querySelectorAll('a.rule-history__item'));
+  historyLinks.forEach(a => { a.dataset.baseHref = a.getAttribute('href'); });
+
+  // 改正履歴の一覧で、表示中の版が見える位置までスクロールしておく(ページ全体は動かさない)
+  const historyList = document.querySelector('.rule-history__list');
+  const currentItem = historyList && historyList.querySelector('[aria-current="page"]');
+  if (currentItem) {
+    const listTop = historyList.getBoundingClientRect().top;
+    const itemBox = currentItem.getBoundingClientRect();
+    if (itemBox.bottom > listTop + historyList.clientHeight || itemBox.top < listTop) {
+      historyList.scrollTop += itemBox.top - listTop - (historyList.clientHeight - itemBox.height) / 2;
+    }
+  }
+
+  function setTab(name) {
+    const compare = name === 'compare' && !!panel;
+    mainEl.classList.toggle('is-compare', compare);
+    if (panel) panel.hidden = !compare;
+    tabText.setAttribute('aria-selected', String(!compare));
+    tabCompare.setAttribute('aria-selected', String(compare));
+    historyLinks.forEach(a => {
+      a.setAttribute('href', a.dataset.baseHref + (compare && a.dataset.hasCompare === 'true' ? '?tab=compare' : ''));
+    });
+    try {
+      const url = new URL(location.href);
+      if (compare) { url.searchParams.set('tab', 'compare'); } else { url.searchParams.delete('tab'); }
+      history.replaceState(null, '', url);
+    } catch (e) { /* URLを書き換えられない環境では表示だけ切り替える */ }
+  }
+
+  tabText.addEventListener('click', function() { setTab('text'); mainEl.scrollTop = 0; });
+  tabCompare.addEventListener('click', function() { setTab('compare'); mainEl.scrollTop = 0; });
+
+  // 条文比較を開いたまま目次の項目を押したら、条文に戻してからその条へ移る
+  const toc = document.getElementById('toc');
+  if (toc) {
+    toc.addEventListener('click', function(e) {
+      if (e.target.closest('a') && mainEl.classList.contains('is-compare')) setTab('text');
+    }, true);
+  }
+
+  let initial = 'text';
+  try { if (new URLSearchParams(location.search).get('tab') === 'compare') initial = 'compare'; } catch (e) {}
+  setTab(initial);
+});
+</script>

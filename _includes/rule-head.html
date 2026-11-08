@@ -1,0 +1,29 @@
+{%- comment -%}
+  ルールポータルの各ページ共通の<head>の中身。
+  page.rule_base: /rule/ からの相対位置(/rule/<ルールID>/ 配下のページは "../")。CSS等の相対パスに付ける。
+  page.noindex: 過去の版・新旧対照表は検索エンジンに載せない。
+{%- endcomment -%}
+{%- assign base = page.rule_base | default: "" -%}
+  <link rel="manifest" href="{{ base }}manifest.json" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ page.title }}{% if page.repealed %}（廃止）{% endif %} | DSルールポータル</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ base }}assets/dads/tokens.css" />
+  <link rel="stylesheet" href="{{ base }}assets/dads/base.css" />
+  <link rel="stylesheet" href="{{ base }}assets/dads/components.css" />
+  <link rel="stylesheet" href="{{ base }}style.css" />
+  <script type="module" src="{{ base }}assets/dads/switch-on-off.js"></script>
+  <meta http-equiv="Cache-Control" content="no-store">
+  {%- if page.noindex %}
+  <meta name="robots" content="noindex" />
+  {%- endif %}
+  <meta property="og:site_name" content="DSクラフト ルールポータル" />
+  <meta property="og:url" content="{{ page.url | absolute_url }}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="{{ page.title }}" />
+  <meta property="og:description" content="{{ page.og_description }}" />
+  <meta property="og:image" content="https://www.ds2.uk/ds_logo_3.png" />
+  <meta property="og:locale" content="ja_JP" />

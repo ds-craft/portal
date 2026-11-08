@@ -647,3 +647,426 @@ body.law-info-v2 .container {
 html {
   scrollbar-gutter: auto;
 }
+
+/* =====================================================================
+   改正履歴(左の列)・表示中の版の見出し・「条文」「条文比較」タブ・条文比較
+   (e-Gov法令検索の条文ページにならう。データは script/rule_history.py が生成する)
+   ===================================================================== */
+
+/* law-info 2行目の「廃止」 */
+.law-info .rule-status.dads-chip-label {
+  border-radius: 0;
+  min-height: auto;
+  padding: 1px 5px;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* 左の列: 上に改正履歴、下に目次を置き、それぞれをスクロールさせる */
+.sidebar {
+  overflow: hidden;
+}
+.sidebar .dads-toc {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.sidebar .dads-toc__heading {
+  flex: 0 0 auto;
+}
+.sidebar .dads-toc > .dads-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden; /* 目次の開閉ボタン(負の余白)で横スクロールが出ないようにする */
+  overflow-y: auto;
+}
+.rule-history {
+  flex: 0 0 auto;
+  max-height: 38%;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-neutral-solid-gray-200);
+}
+.rule-history__heading {
+  flex: 0 0 auto;
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--color-neutral-solid-gray-700);
+}
+.rule-history__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rule-history__item {
+  position: relative;
+  display: block;
+  padding: 7px 24px 7px 8px;
+  border-bottom: 1px solid var(--color-neutral-solid-gray-100);
+  color: var(--color-neutral-solid-gray-900);
+  text-decoration: none;
+  font-size: 13px;
+  line-height: 1.5;
+}
+a.rule-history__item:visited {
+  color: var(--color-neutral-solid-gray-900);
+}
+@media (hover: hover) {
+  a.rule-history__item:hover {
+    background: var(--color-neutral-solid-gray-50);
+  }
+  a.rule-history__item:hover .rule-history__date {
+    text-decoration: underline;
+  }
+}
+.rule-history__item[aria-current="page"] {
+  background: var(--color-primitive-light-blue-50);
+  box-shadow: inset 3px 0 0 var(--color-primitive-light-blue-900);
+}
+.rule-history__item[data-kind="repeal"] {
+  color: var(--color-neutral-solid-gray-700);
+}
+.rule-history__item[data-kind="repeal"] .rule-history__date {
+  padding-left: 18px; /* アイコンのある行と字の頭を揃える */
+}
+.rule-history__date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.rule-history__icon {
+  flex-shrink: 0;
+  color: var(--color-neutral-solid-gray-500);
+}
+.rule-history__by {
+  display: block;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--color-neutral-solid-gray-700);
+}
+.rule-history__star {
+  position: absolute;
+  top: 7px;
+  right: 6px;
+  color: var(--color-neutral-solid-gray-800);
+}
+
+/* 本文の上: 表示中の版の見出し */
+.rule-version {
+  margin: 0 0 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-neutral-solid-gray-200);
+}
+.rule-version__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.rule-version__icon {
+  color: var(--color-neutral-solid-gray-700);
+}
+.rule-version__date {
+  font-size: 16px;
+  font-weight: bold;
+}
+.rule-version__current {
+  font-size: 14px;
+}
+.rule-version__chip.dads-chip-label {
+  border-radius: 0;
+  min-height: auto;
+  padding: 1px 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.rule-version__by {
+  margin: 4px 0 0 26px;
+  font-size: 13px;
+  color: var(--color-neutral-solid-gray-800);
+}
+.rule-version__note {
+  margin: 8px 0 0 26px;
+  padding: 8px 12px;
+  background: var(--color-primitive-yellow-50);
+  border-left: 3px solid var(--color-primitive-yellow-600);
+  font-size: 13px;
+}
+.rule-version__note .dads-link {
+  margin-left: 0.5em;
+}
+
+/* 「条文」「条文比較」タブ(e-Govと同じく中央にまとめたボタン) */
+.rule-tabs {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 24px;
+}
+.rule-tabs__tab {
+  min-width: 88px;
+  padding: 4px 16px;
+  border: 1px solid var(--color-neutral-solid-gray-420);
+  background: var(--color-neutral-white);
+  color: var(--color-neutral-solid-gray-900);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.rule-tabs__tab + .rule-tabs__tab {
+  border-left: 0;
+}
+.rule-tabs__tab:first-child {
+  border-radius: 4px 0 0 4px;
+}
+.rule-tabs__tab:last-child {
+  border-radius: 0 4px 4px 0;
+}
+.rule-tabs__tab[aria-selected="true"] {
+  background: var(--color-primitive-light-blue-50);
+  color: var(--color-primitive-light-blue-900);
+  font-weight: bold;
+}
+.rule-tabs__tab:disabled {
+  color: var(--color-neutral-solid-gray-420);
+  cursor: not-allowed;
+}
+.rule-tabs__tab:focus-visible {
+  outline: 2px solid var(--color-primitive-yellow-300);
+  outline-offset: 1px;
+}
+
+/* 条文比較を開いているときは条文を隠す */
+.main-content.is-compare > .law-header,
+.main-content.is-compare > .law-title,
+.main-content.is-compare > section {
+  display: none;
+}
+
+/* 条文比較(新旧対照表): 改正された条だけを、左に改正後・右に改正前で並べ、改正された部分に傍線を引く。
+   本文の領域の端から端まで広げ、罫線は見出し行の上下と中央の線だけにする。
+   e-Gov法令検索と同じく、欄は灰色の背景にし、改正のあった行は白い箱に入れる。
+   狭い画面でも左右に並べたまま、文字と余白を小さくする */
+.rule-compare__lead {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--color-neutral-solid-gray-700);
+}
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 15px;
+}
+.diff-table th,
+.diff-table td {
+  border: 0;
+  padding: 0;
+  vertical-align: top;
+}
+.diff-table th {
+  border-top: 1px solid var(--color-neutral-solid-gray-300);
+  border-bottom: 1px solid var(--color-neutral-solid-gray-300);
+}
+.diff-table td {
+  background: var(--color-neutral-solid-gray-50);
+}
+/* 表の下端だけは線で閉じる */
+.diff-table tbody:last-child tr:last-child td,
+.diff-table tbody:last-child td[rowspan] {
+  border-bottom: 1px solid var(--color-neutral-solid-gray-300);
+}
+/* 条ごとに<tbody>を分けてあるので、条の最初と最後の行に余白を付けて条どうしを区切る */
+.diff-table tbody tr:first-child td {
+  padding-top: 10px;
+}
+.diff-table tbody tr:last-child td {
+  padding-bottom: 10px;
+}
+.diff-table th + th,
+.diff-table td + td {
+  border-left: 1px solid var(--color-neutral-solid-gray-300);
+}
+.diff-table th {
+  padding: 8px 12px;
+  background: var(--color-neutral-white);
+  font-weight: bold;
+  text-align: center;
+}
+.diff-date {
+  display: block;
+  font-size: 12px;
+  font-weight: normal;
+  color: var(--color-neutral-solid-gray-700);
+}
+.diff-line {
+  padding: 3px 16px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* 改正のあった行: 灰色の中の白い箱(文字の開始位置は改正のない行と揃える) */
+.diff-line:not(.is-same) {
+  margin: 4px 8px;
+  padding: 6px 8px;
+  background: var(--color-neutral-white);
+}
+.diff-heading {
+  font-weight: bold;
+}
+.diff-mark {
+  font-weight: bold;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+ins.diff-mark {
+  background: var(--color-primitive-yellow-100);
+}
+del.diff-mark {
+  background: var(--color-primitive-red-50);
+}
+.diff-none {
+  padding: 10px 16px; /* 白い箱の中の文字と高さを揃える */
+  color: var(--color-neutral-solid-gray-600);
+}
+.diff-empty {
+  font-size: 14px;
+  color: var(--color-neutral-solid-gray-700);
+}
+
+/* =====================================================================
+   余白: 本文の領域(main-content)と左の列(sidebar)自体は余白を持たず、
+   中の要素ごとに余白を付ける(e-Gov法令検索にならう。版の見出しの下線や条文比較の表は端まで届く)
+   ===================================================================== */
+.main-content {
+  padding: 0;
+}
+.main-content > * {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+.main-content > .rule-compare {
+  padding-left: 0;
+  padding-right: 0;
+}
+.main-content > .rule-compare > .rule-compare__lead,
+.main-content > .rule-compare > .diff-empty {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+.main-content > .rule-version {
+  margin: 0 0 16px;
+  padding-top: 16px;
+}
+.main-content > .law-header:first-child {
+  padding-top: 28px; /* 版の情報がないページ(改正履歴のデータがない場合) */
+}
+.main-content::after {
+  content: "";
+  display: block;
+  height: 40px; /* 本文の最後が画面の下端に付かないようにする */
+}
+
+.sidebar {
+  padding: 0;
+}
+.rule-history {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.rule-history__heading {
+  margin: 0;
+  padding: 14px 16px 6px;
+}
+.rule-history__item {
+  padding: 7px 32px 7px 16px;
+}
+.rule-history__star {
+  right: 14px;
+}
+.sidebar .dads-toc__heading {
+  margin: 0;
+  padding: 14px 16px 10px;
+}
+.sidebar .dads-toc > .dads-list {
+  padding: 0 16px 16px 24px; /* 左は開閉の印(▼)が端に付かない幅 */
+}
+
+@media (max-width: 768px) {
+  .rule-history {
+    max-height: 35%;
+  }
+  .rule-version__by,
+  .rule-version__note {
+    margin-left: 0;
+  }
+  .main-content {
+    padding: 0;
+  }
+  .main-content > *,
+  .main-content > .rule-compare > .rule-compare__lead,
+  .main-content > .rule-compare > .diff-empty {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .main-content > .rule-compare {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .main-content > .law-header:first-child {
+    padding-top: 20px;
+  }
+  .sidebar {
+    padding: 0;
+  }
+  .sidebar__footer {
+    padding: 12px 16px 16px;
+  }
+  .diff-table {
+    font-size: 13px;
+  }
+  .diff-table th {
+    padding: 6px 8px;
+  }
+  .diff-table tbody tr:first-child td {
+    padding-top: 8px;
+  }
+  .diff-table tbody tr:last-child td {
+    padding-bottom: 8px;
+  }
+  .diff-line {
+    padding: 2px 8px;
+  }
+  .diff-line:not(.is-same) {
+    margin: 4px 4px;
+    padding: 4px 4px;
+  }
+  .diff-none {
+    padding: 8px;
+  }
+  .diff-date {
+    font-size: 11px;
+  }
+}
+
+@media print {
+  .rule-tabs,
+  .rule-history {
+    display: none !important;
+  }
+  .main-content > * {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  .main-content::after {
+    display: none;
+  }
+}

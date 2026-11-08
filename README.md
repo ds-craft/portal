@@ -61,8 +61,9 @@ Minecraft（Java版）のマルチプレイコミュニティ「3DS半分こす�
 ├── _rules/                   # サブモジュール ds-craft/rules。条文は _rules/rules/（1ファイル ＝ 1ルール、廃止したルールは rules/repealed/）
 ├── _docs/                    # ガイド本文（Markdown、_docs/<タブ>/ に 1ファイル ＝ 1章）
 ├── _data/docs_tabs.yml       # ガイドのタブ定義（並び・名前・アイコン・関連リンク）
-├── _layouts/                 # rule.html：条文ページ、doc.html：ガイドページの共通レイアウト
-├── _includes/                # 条文ページ・ガイドページ用スクリプト（目次生成・表示切り替え・コピー等）
+├── _layouts/                 # rule.html：条文ページ（過去の版・改正履歴・条文比較を含む）、doc.html：ガイドページ
+├── _includes/                # 条文ページ・ガイドページの共通部品とスクリプト（目次生成・表示切り替え・コピー等）
+├── script/                   # rule_history.py：改正履歴・過去の版・条文比較を生成、serve.sh：ローカルの開発サーバーを起動
 ├── docs/assets/docs.css      # ガイドページのスタイル
 ├── rule/                     # ルールポータルの一覧ページ・スタイル
 │   └── assets/dads/          # デジタル庁デザインシステムから抜粋した CSS・JS
@@ -91,13 +92,18 @@ bundle install
 
 ### ローカル実行
 
-リポジトリのルートで以下のコマンドを実行し、ローカル開発サーバーを起動します。
+リポジトリのルートで以下のコマンドを実行し、ローカル開発サーバーを起動します（WSL・Linux・macOS。Python 3 も必要です）。
 
 ```bash
-bundle exec jekyll serve --baseurl ""
+script/serve.sh
 ```
 
-`--baseurl ""` を付けないと、GitHub の認証情報がない環境では jekyll-github-metadata が公開パスを `/pages/ds-craft/portal` と推定し、OGP などの URL が本番と食い違います（本番のビルドでは GitHub Actions が同じ指定をしています）。
+`script/serve.sh` は、ルールの改正履歴のページを生成（`python3 script/rule_history.py`）してから、`bundle exec jekyll serve --baseurl "" --force_polling` を実行します。
+
+- `--baseurl ""` を付けないと、GitHub の認証情報がない環境では jekyll-github-metadata が公開パスを `/pages/ds-craft/portal` と推定し、OGP などの URL が本番と食い違います（本番のビルドでは GitHub Actions が同じ指定をしています）。
+- `--force_polling` は、WSL で Windows 側のファイルを編集したときに変更を検知させるためです。
+- gem は `~/.cache/portal-bundle` に入ります（環境変数 `BUNDLE_PATH` で変えられます）。
+- ルール（`_rules`）を更新したときは、改正履歴のページを作り直すため `script/serve.sh` を起動し直してください。
 
 起動後、ブラウザで `http://localhost:4000/` を開きます。
 
@@ -117,6 +123,22 @@ git pull --recurse-submodules                                           # 自動
 ### 公開
 
 `main` に push すると、GitHub Actions（`.github/workflows/pages.yml`）でビルドし、GitHub Pages に公開します。プルリクエストではビルドが通るかだけを確かめます。
+
+#### 改正履歴・過去の版・条文比較
+
+条文ページは e-Gov法令検索にならい、左の列の目次の上に「改正履歴」（版の一覧）を、本文の上に表示中の版の見出しと「条文」「条文比較」の切り替えを表示します。条文比較（新旧対照表）は `?tab=compare` で開きます。
+
+ビルドの前に `script/rule_history.py` が `_rules` の Git 履歴を読み、次を生成します（コミットしません）。
+
+| 生成物 | 内容 |
+|---|---|
+| `_data/rule_history.json` | ルールごとの版の一覧と、各版の条文比較の HTML |
+| `_rule_versions/<ルールID>/<改正したルールのID>.md` | 過去の版の条文。`/rule/<ルールID>/<改正したルールのID>.html` で公開（制定時の版はそのルール自身のID） |
+
+- 作者がルール番号（例：`令和8年ルール第2号`）で `Enforced` トレーラーのあるコミットを、1つの版として扱います。それ以外のコミット（誤記の修正など）は版を増やさず、その時点の版の文面に反映します。
+- 最新の版（廃止したルールは廃止時点の版）は、元の条文ページ（`/rule/<ルールID>.html`）で表示します。
+- 条文比較（新旧対照表）は、改正された条（見出し `#` ごとのかたまり）だけを、左に改正後・右に改正前で並べ、変わった文字に傍線を引きます（狭い画面でも左右に並べます）。リンクや `{: data-general="true"}` の違いは比べません。
+- 過去の版のページには `noindex` を付けています。
 
 #### ファイル名規則
 

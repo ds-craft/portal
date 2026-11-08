@@ -5,3 +5,10 @@ _site/
 
 guide-rewrite.md
 docs-work/
+
+# script/rule_history.py の生成物(ビルドのたびに _rules の履歴から作る)
+_rule_versions/
+_data/rule_history.json
+
+# bundle install --path 等で入る gem
+vendor/

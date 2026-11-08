@@ -1,0 +1,20 @@
+{%- comment -%}
+  条文ページの左の列(目次の上)に出す改正履歴。e-Gov法令検索の「法令改正履歴」にならい、
+  新しい版から並べ、表示中の版を強調し、現行の版に★を付ける。廃止したルールは先頭に廃止を出す。
+  データは _data/rule_history.json(script/rule_history.py が生成)。
+{%- endcomment -%}
+{%- assign rid = page.rule_id | default: page.slug -%}
+{%- assign hist = site.data.rule_history[rid] -%}
+{%- if hist %}
+      <section class="rule-history" aria-labelledby="rule-history-heading">
+        <h2 class="rule-history__heading" id="rule-history-heading">改正履歴</h2>
+        <ol class="rule-history__list">
+          {%- if hist.repeal %}
+          <li><div class="rule-history__item" data-kind="repeal"><span class="rule-history__date">{{ hist.repeal.date }} 廃止</span><span class="rule-history__by">（{{ hist.repeal.by_number }}）</span></div></li>
+          {%- endif %}
+          {%- for v in hist.versions reversed %}
+          <li><a class="rule-history__item" href="{{ v.url | relative_url }}" data-has-compare="{% if v.compare_html %}true{% else %}false{% endif %}"{% if v.url == page.url %} aria-current="page"{% endif %}><span class="rule-history__date"><svg class="rule-history__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h9l5 5v15H6V2Z" stroke="currentColor" stroke-width="1.6"/><path d="M15 2v5h5" stroke="currentColor" stroke-width="1.6"/></svg>{{ v.date }} 施行</span>{% if v.latest and hist.repealed == false %}<span class="rule-history__star" title="現行">★<span class="dads-u-visually-hidden">現行</span></span>{% endif %}<span class="rule-history__by">（{{ v.by_number }}）</span></a></li>
+          {%- endfor %}
+        </ol>
+      </section>
+{%- endif %}
