@@ -56,6 +56,8 @@ Minecraft（Java版）のマルチプレイコミュニティ「3DS半分こす�
 ├── guide.html                # 旧・新規参加者ガイド（/docs/life/ への転送のみ）
 ├── style.css                 # 全体共通ベーススタイル
 ├── _config.yml               # Jekyll 設定ファイル
+├── Gemfile, Gemfile.lock     # ビルドに使う gem（GitHub Pages と同じ版の github-pages）
+├── .github/workflows/pages.yml  # GitHub Actions でのビルド・公開とルールの更新の取り込み
 ├── _rules/                   # サブモジュール ds-craft/rules。条文は _rules/rules/（1ファイル ＝ 1ルール、廃止したルールは rules/repealed/）
 ├── _docs/                    # ガイド本文（Markdown、_docs/<タブ>/ に 1ファイル ＝ 1章）
 ├── _data/docs_tabs.yml       # ガイドのタブ定義（並び・名前・アイコン・関連リンク）
@@ -79,21 +81,23 @@ Minecraft（Java版）のマルチプレイコミュニティ「3DS半分こす�
 本番の GitHub Pages と同じ版に揃えます（GitHub Pages の[依存バージョン一覧](https://pages.github.com/versions/)に基づく）。
 
 - Ruby 3.3.4
-- Jekyll 3.10.0（`github-pages` gem v232 に同梱）
+- Jekyll 3.10.0（`github-pages` gem v232 に同梱。`Gemfile` で版を固定）
 
 ```bash
-gem install github-pages -v 232
+bundle install
 ```
 
-リポジトリに Gemfile は置いていないため、上記の gem をシステム環境にインストールして使います。本番と異なる版の Jekyll（4 系など）でビルドすると、表示が本番と食い違う場合があります。GitHub Pages 側の版は更新されることがあるため、依存バージョン一覧で最新の値を確認してください。
+`Gemfile` の `github-pages` は `jekyll_plugins` グループに入れているため、GitHub Pages が既定で読み込むプラグイン（jekyll-github-metadata など）も本番と同じように読み込まれます。GitHub Pages 側の版は更新されることがあるため、依存バージョン一覧で最新の値を確認し、`Gemfile` の版を上げて `bundle update github-pages` してください。
 
 ### ローカル実行
 
 リポジトリのルートで以下のコマンドを実行し、ローカル開発サーバーを起動します。
 
 ```bash
-jekyll serve
+bundle exec jekyll serve --baseurl ""
 ```
+
+`--baseurl ""` を付けないと、GitHub の認証情報がない環境では jekyll-github-metadata が公開パスを `/pages/ds-craft/portal` と推定し、OGP などの URL が本番と食い違います（本番のビルドでは GitHub Actions が同じ指定をしています）。
 
 起動後、ブラウザで `http://localhost:4000/` を開きます。
 
@@ -101,13 +105,18 @@ jekyll serve
 
 ルールは `_rules/rules/` ディレクトリ配下に「1ルール1ファイル」の Markdown 形式で配置します。一覧ページはビルド時に各ファイルの front matter から自動生成されるため、一覧ページ側を手動で編集する必要はありません。
 
-`_rules/` はルール用リポジトリ [ds-craft/rules](https://github.com/ds-craft/rules) のサブモジュールです。ルールの追加・改正・廃止は ds-craft/rules に「改正行為ごとに1コミット（コミット日時は施行日）」で記録し、このリポジトリではサブモジュールの参照先を更新します。
+`_rules/` はルール用リポジトリ [ds-craft/rules](https://github.com/ds-craft/rules) のサブモジュールです。ルールの追加・改正・廃止は ds-craft/rules に「改正行為ごとに1コミット（コミット日時は施行日）」で記録します。
+
+ds-craft/rules の main に push すると、rules のワークフローがこのリポジトリに通知し（GitHub App のトークンで `repository_dispatch` を送る）、このリポジトリのワークフロー（`.github/workflows/pages.yml`）がサブモジュールの参照先を最新の main に進めてコミットし、サイトをビルド・公開します。手作業で取り込む必要はありません。通知が届かなかったときは、Actions の「サイトのビルドと公開」を手動実行（Run workflow）すると同じ処理が行われます。
 
 ```bash
 git clone --recurse-submodules https://github.com/ds-craft/portal.git   # 初回
-git submodule update --remote _rules                                    # ルールの更新を取り込む
-git add _rules && git commit -m "ルールを更新"
+git pull --recurse-submodules                                           # 自動で取り込まれた更新を手元に反映する
 ```
+
+### 公開
+
+`main` に push すると、GitHub Actions（`.github/workflows/pages.yml`）でビルドし、GitHub Pages に公開します。プルリクエストではビルドが通るかだけを確かめます。
 
 #### ファイル名規則
 

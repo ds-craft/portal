@@ -1,0 +1,82 @@
+# サイトをビルドしてGitHub Pagesに公開する。
+#
+# - mainへのpush：そのままビルド・公開する
+# - ds-craft/rules からの通知(repository_dispatch: rules-updated)・手動実行：
+#   サブモジュール _rules を rules の最新の main に進めてmainにコミットしてから、ビルド・公開する
+#   (このコミットはGITHUB_TOKENで行うため、pushのワークフローは重ねて動かない)
+# - プルリクエスト：ビルドが通るかだけを確かめる(公開しない)
+name: サイトのビルドと公開
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  repository_dispatch:
+    types: [rules-updated]
+  workflow_dispatch:
+
+# 公開は1つずつ順に行う(実行中の公開は取り消さない)
+concurrency:
+  group: pages-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # サブモジュールの参照先を更新するコミット
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0  # ルールの改正履歴(サブモジュールの全履歴)を使うため
+
+      - name: ルールの更新を取り込む
+        if: github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
+        run: |
+          git submodule update --remote _rules
+          if git diff --quiet -- _rules; then
+            echo "ルールに更新はありません"
+            exit 0
+          fi
+          subject=$(git -C _rules log -1 --format=%s)
+          sha=$(git -C _rules rev-parse --short HEAD)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add _rules
+          git commit -m "ルールを更新：${subject}" -m "ds-craft/rules@${sha}"
+          git push origin HEAD:main
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          # GitHub Pagesは3.3.4だが、新しいランナーには3.3系の最新版しかないため3.3を指定する(パッチ版の違いは出力に影響しない)
+          ruby-version: "3.3"
+          bundler-cache: true  # Gemfile.lock のgemを vendor/bundle に入れてキャッシュする
+
+      - id: pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - name: ビルド
+        run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
+        env:
+          JEKYLL_ENV: production
+          PAGES_REPO_NWO: ${{ github.repository }}
+          JEKYLL_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

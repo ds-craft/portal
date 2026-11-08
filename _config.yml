@@ -38,6 +38,11 @@ exclude:
   - README.md
   - _rules/README.md
   - _rules/LICENSE
+# Gemfile・Gemfile.lockはビルド環境の設定、vendor/はGitHub Actionsのビルドでgemが入る場所のため除外する
+# (excludeを書くとJekyll既定の除外が上書きされるため、明示する)。
+  - Gemfile
+  - Gemfile.lock
+  - vendor
 
 # ルール条文をMarkdown(_rules/*.md)で書くための変換設定。
 # hard_wrap: 条文中の改行(項・号の区切り)をそのまま<br>にする。
