@@ -18,6 +18,14 @@
 条文比較(新旧対照表)は、改正された条(見出しごとのかたまり)だけを、左に改正後・右に改正前で並べ、
 変わった文字に傍線を引く。
 
+施行前の改正(ds-craft/rules の pending/<改正ルールID>/。rule-builder が可決後に置き、施行日に消す)も読み、
+次を書き出す(どちらもコミットしない生成物)。
+  _pending_rules/<ルールID>.md  施行前に制定されるルールの全文(コレクション pending_rules)
+                               → /rule/<ルールID>.html(施行日には本物のページに置き換わり、URL は変わらない)
+  _data/rule_pending.json      改正・廃止される施行中のルールごとの、施行前の改正の情報と新旧対照表のHTML
+                               (条文ページの上の「…により改正されます」の帯に使う)
+pending/ のコミット(作者は GitHub App)は rules/ のファイルを変えないので、改正履歴には数えない。
+
 使い方: python3 script/rule_history.py   (リポジトリのルートで実行。標準ライブラリのみ使用)
 """
 import difflib
@@ -35,6 +43,11 @@ RULES_DIR = "rules"
 REPEALED_DIR = "rules/repealed"
 OUT_DIR = ROOT / "_rule_versions"
 DATA_FILE = ROOT / "_data" / "rule_history.json"
+PENDING_DIR = "pending"
+PENDING_OUT_DIR = ROOT / "_pending_rules"
+PENDING_DATA_FILE = ROOT / "_data" / "rule_pending.json"
+ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+RULE_ID_RE = re.compile(r"^R\d{7}$")
 
 KIND_CODE = {"ルール": "01", "ルール施行令": "02", "国内法": "10"}
 NUMBER_RE = re.compile(r"^令和(\d+)年(ルール施行令|ルール|国内法)第(\d+)号$")
@@ -373,6 +386,82 @@ def build_rule(rid: str, path: str, data: dict):
         }, body)
 
 
+# ---------------------------------------------------------------- 施行前の改正
+
+def build_pending(history: dict):
+    """_rules/pending/<改正ルールID>/ を読み、施行前の制定ルールのページと、改正・廃止の帯のデータを作る。
+    pending.json は rule-builder が置く(packages/core の pendingFiles と同じ形):
+      {"amendingNumber", "amendingId", "enforcementDate"(YYYY-MM-DD), "subject",
+       "rules": [{"id", "op": "create"|"amend"|"repeal"}], "publicUrl"}
+    """
+    if PENDING_OUT_DIR.exists():
+        shutil.rmtree(PENDING_OUT_DIR)
+    PENDING_OUT_DIR.mkdir()
+    data = {}
+    root = RULES_REPO / PENDING_DIR
+    infos = sorted(root.glob("*/pending.json")) if root.exists() else []
+    created = 0
+    for info_path in infos:
+        info = json.loads(info_path.read_text(encoding="utf-8"))
+        base = info_path.parent
+        aid = info.get("amendingId") or base.name
+        number = info.get("amendingNumber", "")
+        date_iso = info.get("enforcementDate", "")
+        if not ISO_DATE_RE.match(date_iso):
+            sys.exit(f"{info_path}: 施行日が正しくありません: {date_iso!r}")
+        date = wareki(date_iso)
+        subject = re.sub(r"\s*施行$", "", info.get("subject", ""))
+        for r in info.get("rules", []):
+            rid, op = r.get("id", ""), r.get("op", "")
+            if not RULE_ID_RE.match(rid) or op not in ("create", "amend", "repeal"):
+                sys.exit(f"{info_path}: ルールが正しくありません: {r!r}")
+            rel = f"{REPEALED_DIR}/{rid}.md" if op == "repeal" else f"{RULES_DIR}/{rid}.md"
+            src = base / rel
+            if not src.exists():
+                sys.exit(f"{info_path}: {rel} がありません")
+            fm, body = split_front_matter(src.read_text(encoding="utf-8"))
+            if op == "create":
+                if (RULES_REPO / RULES_DIR / f"{rid}.md").exists():
+                    continue  # もう施行済み(pending/ を消すコミットがまだ届いていない)
+                write_page(PENDING_OUT_DIR / f"{rid}.md", {
+                    **fm,
+                    "layout": "rule",
+                    "permalink": f"/rule/{rid}.html",
+                    "rule_id": rid,
+                    "pending": True,
+                    "pending_by_number": number,
+                    "pending_date": date,
+                    "pending_date_iso": date_iso,
+                }, body)
+                created += 1
+                continue
+            current = RULES_REPO / RULES_DIR / f"{rid}.md"
+            if not current.exists():
+                continue  # 改正・廃止の対象が施行中にない(反映済み)
+            cur_fm, cur_body = split_front_matter(current.read_text(encoding="utf-8"))
+            versions = history.get(rid, {}).get("versions", [])
+            cur_date = versions[-1]["date"] if versions else cur_fm.get("enforcement_date", "")
+            entry = {
+                "by_number": number,
+                "by_id": aid,
+                "title": subject,
+                "date": date,
+                "date_iso": date_iso,
+                "op": op,
+                "public_url": info.get("publicUrl"),
+                "compare_html": None,
+            }
+            if op == "amend":
+                entry["compare_html"] = compare_html(
+                    {"fm": cur_fm, "body": cur_body, "date": cur_date},
+                    {"fm": fm, "body": body, "date": date},
+                )
+            data[rid] = entry
+    PENDING_DATA_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
+    if infos:
+        print(f"施行前の改正 {len(infos)} 件（制定 {created} 件・改正と廃止 {len(data)} 件）を生成しました")
+
+
 def main():
     if not (RULES_REPO / ".git").exists():
         sys.exit("_rules がありません(git submodule update --init を実行してください)")
@@ -390,6 +479,7 @@ def main():
     DATA_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
     n = sum(len(r["versions"]) for r in data.values())
     print(f"ルール {len(data)} 件・版 {n} 件の改正履歴を生成しました")
+    build_pending(data)
 
 
 if __name__ == "__main__":

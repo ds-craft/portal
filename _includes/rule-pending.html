@@ -1,0 +1,29 @@
+{%- comment -%}
+  施行前の改正の帯(ds-craft/rules の pending/ から script/rule_history.py が作る)。現行のページだけに出す。
+  - 施行前に制定されるルールのページ(_pending_rules/):「施行前」と施行日。施行日には本物のページに置き換わる
+  - 改正・廃止される施行中のルール:「…により改正されます（…施行）」と新旧対照表。改正後の全文のページは作らない
+{%- endcomment -%}
+{%- assign rid = page.rule_id | default: page.slug -%}
+{%- unless page.version_id -%}
+{%- if page.pending -%}
+      <div class="rule-pending" role="note">
+        <span class="dads-chip-label rule-pending__chip" data-style="filled-1" data-color="yellow">施行前</span>
+        <p class="rule-pending__text">このルールは{{ page.pending_by_number }}により制定され、<strong>{{ page.pending_date }}</strong>に施行されます。施行までは効力がありません。</p>
+      </div>
+{%- else -%}
+{%- assign pend = site.data.rule_pending[rid] -%}
+{%- if pend -%}
+      <div class="rule-pending" role="note">
+        <span class="dads-chip-label rule-pending__chip" data-style="filled-1" data-color="yellow">施行前の{% if pend.op == "repeal" %}廃止{% else %}改正{% endif %}</span>
+        <p class="rule-pending__text">このルールは、{{ pend.by_number }}により{% if pend.op == "repeal" %}廃止{% else %}改正{% endif %}されます（<strong>{{ pend.date }}施行</strong>）。以下は現在の条文です。</p>
+        {%- if pend.compare_html %}
+        <details class="rule-pending__compare">
+          <summary>新旧対照表を見る</summary>
+          <p class="rule-compare__lead">{{ pend.by_number }}による改正で変わる条だけを載せています。<ins class="diff-mark">傍線</ins>の部分が改正後に加わる部分、<del class="diff-mark">傍線</del>の部分が改正前にあって改められる部分です。</p>
+          {{ pend.compare_html }}
+        </details>
+        {%- endif %}
+      </div>
+{%- endif -%}
+{%- endif -%}
+{%- endunless -%}

@@ -760,6 +760,41 @@ a.rule-history__item:visited {
 }
 
 /* 本文の上: 表示中の版の見出し */
+/* 施行前の改正の帯(_includes/rule-pending.html) */
+.rule-pending {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  background: var(--color-primitive-yellow-50);
+  border: 1px solid var(--color-primitive-yellow-400);
+  border-radius: 8px;
+}
+.main-content > .rule-pending {
+  margin-top: 16px;
+}
+.rule-pending__chip.dads-chip-label {
+  border-radius: 0;
+  min-height: auto;
+  padding: 1px 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.rule-pending__text {
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+.rule-pending__compare {
+  margin-top: 8px;
+}
+.rule-pending__compare summary {
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: underline;
+}
+.rule-pending__compare .diff-table {
+  margin-top: 8px;
+  background: #fff;
+}
 .rule-version {
   margin: 0 0 16px;
   padding-bottom: 14px;

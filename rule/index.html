@@ -101,8 +101,23 @@ document.addEventListener('DOMContentLoaded', function() {
       enforcement_date: {{ rule.enforcement_date | jsonify }},
       category: {{ rule.category | jsonify }},
       repealed: {{ rule.repealed | default: false | jsonify }},
-      repealed_date: {{ rule.repealed_date | jsonify }}
-    }{% unless forloop.last %},{% endunless %}
+      repealed_date: {{ rule.repealed_date | jsonify }},
+      pending_date: null
+    },
+    {%- endfor %}
+    {%- comment -%} 施行前に制定されるルール(script/rule_history.py が _rules/pending/ から作る) {%- endcomment -%}
+    {%- for rule in site.pending_rules %}
+    {
+      id: {{ rule.url | split: '/' | last | jsonify }},
+      order: {{ rule.order | default: 9999 | jsonify }},
+      rule_name: {{ rule.rule_name | jsonify }},
+      rule_number: {{ rule.rule_number | jsonify }},
+      enforcement_date: {{ rule.pending_date | jsonify }},
+      category: {{ rule.category | jsonify }},
+      repealed: false,
+      repealed_date: null,
+      pending_date: {{ rule.pending_date | jsonify }}
+    },
     {%- endfor %}
   ];
   const categoryOrder = { "ルール": 0, "ルール施行令": 1, "国内法": 2 };
@@ -138,14 +153,16 @@ document.addEventListener('DOMContentLoaded', function() {
       const li = document.createElement('li');
       const numberText = rule.rule_number ? `<span class="rule-item__number">（${escapeHtml(rule.rule_number)}）</span>` : '';
       const repealedChip = rule.repealed ? '<span class="dads-chip-label rule-item__status" data-style="filled-2" data-color="gray">廃止</span>' : '';
+      // 施行前に制定されるルールは「施行前（令和8年12月1日施行）」の印を付ける
+      const pendingChip = rule.pending_date ? `<span class="dads-chip-label rule-item__status" data-style="filled-1" data-color="yellow">施行前（${escapeHtml(rule.pending_date)}施行）</span>` : '';
       // 廃止したルールは廃止日だけを出す(どのルールにより廃止されたかは条文ページに出す)
       const repealText = rule.repealed && rule.repealed_date
         ? `<span class="rule-date">${escapeHtml(rule.repealed_date)} 廃止</span>` : '';
       li.innerHTML = `
         <a class="rule-item${rule.repealed ? ' rule-item--repealed' : ''}" href="${escapeHtml(rule.id)}">
-          <div class="rule-item__row1"><svg class="rule-item__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h9l5 5v15H6V2Z" stroke="currentColor" stroke-width="1.6"/><path d="M15 2v5h5" stroke="currentColor" stroke-width="1.6"/></svg><span class="rule-item__title">${escapeHtml(rule.rule_name)}</span>${numberText}<span class="dads-chip-label rule-item__category" data-style="outlined" data-color="gray">${escapeHtml(rule.category)}</span>${repealedChip}</div>
+          <div class="rule-item__row1"><svg class="rule-item__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h9l5 5v15H6V2Z" stroke="currentColor" stroke-width="1.6"/><path d="M15 2v5h5" stroke="currentColor" stroke-width="1.6"/></svg><span class="rule-item__title">${escapeHtml(rule.rule_name)}</span>${numberText}<span class="dads-chip-label rule-item__category" data-style="outlined" data-color="gray">${escapeHtml(rule.category)}</span>${repealedChip}${pendingChip}</div>
           <div class="rule-meta">
-            <span class="rule-date">${escapeHtml(rule.enforcement_date)} 施行</span>${repealText}
+            <span class="rule-date">${escapeHtml(rule.enforcement_date)} 施行${rule.pending_date ? '予定' : ''}</span>${repealText}
           </div>
         </a>
       `;

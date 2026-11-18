@@ -16,6 +16,10 @@ collections:
   # 生成する(コミットしない)。公開パスは各ページの permalink で /rule/<ルールID>/<改正したルールのID>.html に指定する。
   rule_versions:
     output: true
+  # 施行前に制定されるルール(_pending_rules/<ルールID>.md)。script/rule_history.py が _rules/pending/ から
+  # 生成する(コミットしない)。公開パスは施行後と同じ /rule/<ルールID>.html にする(施行日には帯が消えるだけ)。
+  pending_rules:
+    output: true
 
 # _rules はルール用リポジトリ(ds-craft/rules)のサブモジュール。条文は _rules/rules/ にある。
 # 廃止したルールは _rules/rules/repealed/ に置かれており、repealed: true を付けて区別する
@@ -42,6 +46,10 @@ exclude:
   - README.md
   - _rules/README.md
   - _rules/LICENSE
+# _rules/pending/ は施行前の改正の置き場所(rule-builder が可決後に置き、施行日に消す)。rules/ と同じパスの
+# 改正後のファイルがあり、そのまま変換すると施行中のページと同じ公開パスになるため除外する
+# (施行前のページと帯は script/rule_history.py が作る)。
+  - _rules/pending
 # Gemfile・Gemfile.lockはビルド環境の設定、vendor/はGitHub Actionsのビルドでgemが入る場所のため除外する
 # (excludeを書くとJekyll既定の除外が上書きされるため、明示する)。
   - Gemfile
